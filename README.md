@@ -3,3 +3,8 @@ JavaScript function to create search for existing elements text so it not good t
 
 # features
 it can helight and scroll to helighted element while hovering, you can select elements by click on it, also all actions can done by mouse and keyboard so you can also hovering by click on arrow down and arrow up keys and select with enter
+
+
+add to your web pages with one function call
+
+![image](https://github.com/MahmoudHegazi/search2/assets/55125302/182187bb-63dc-433a-9cea-95b8ccd86389)
