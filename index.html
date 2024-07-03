@@ -1,0 +1,543 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <title>Bootstrap Example</title>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/css/bootstrap.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/jquery@3.7.1/dist/jquery.slim.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.1/dist/umd/popper.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/js/bootstrap.bundle.min.js"></script>
+  <style>
+   .cursor-pointer {
+     cursor: pointer !important;
+   }
+   /*
+   .suggest_hover:hover {
+     background: lightblue !important;
+     color: black !important;
+   }*/
+   /* helight suggest and hover classes */
+   .suggest_class {
+     background: lightgray !important;
+     color: black !important;
+   }
+   .helight_class {
+     background: lightblue !important;
+     color: black !important;
+   }
+   .select_class {
+     background: lightgreen !important;
+     color: black !important;
+   }
+  </style>
+</head>
+<body>
+
+<h1>Welcome to My Homepage</h1>
+
+<div class="row">
+  <div class="col-sm-12 row border border-primary">
+     <div class="border border-success col-sm-5 ml-auto p-0 m-0" style="max-width:300px !important;position:relative;">
+         <input type="search" id="demo" autocomplete="off"  placeholder="search" class="form-control" />
+         
+         <div id="search_settings" class="p-2 bg-light border border-secondary w-100" style="position:absolute;display:none;"></div>
+         <div class="p-2 bg-light border border-secondary w-100" style="position:absolute;display:none;" id="search_suggestions">
+         </div>
+     </div>
+  </div>
+</div>
+
+<div id="sentence_cont" class="container-fluid p-3 shadow" style="max-height:300px !important;overflow:auto !important;">
+  <p class="sentence">hello</p>
+  <p class="sentence">hello world</p>
+  <p class="sentence">hello world demo</p>
+  <p class="sentence">diff</p>
+  <p class="sentence">different</p>
+  <p class="sentence">demo</p>
+  <p class="sentence">ninjA</p>
+  <p class="sentence">Master</p>
+  <p class="sentence">Master Developer</p>
+  <p class="sentence">Developer</p>
+  <p class="sentence">Hacker</p>
+  <p class="sentence">Secuirty</p>
+  <p class="sentence">Secure Bot</p>
+  <p class="sentence">demo text</p>
+  <p class="sentence">hello text qwiokjwoijqwoijqwi qwjqwijqw klqmjm mnmnq</p>
+  <p class="sentence">demo text qwiokjwoijqwoijqwi qwjqwijqw klqmjm mnmnq</p>
+  <p class="sentence">demo text klqmjm mnmnq</p>
+  <p class="sentence">another text</p>
+  <p class="sentence">different klqmjm is abc</p>
+  <p class="sentence">diff hello</p>
+  <p class="sentence">other</p>
+  <p class="sentence">another bigger text is abc</p>
+</div>
+
+<script>
+class SentenceObj {
+    constructor(search2Parent, sentenceElm, sentence, isEmpty, searchVal, searchElm, searchIndex, searchPercentage, notMatch, i) {
+        this.search2Parent = search2Parent;
+        this.sentenceElm = sentenceElm;
+        this.sentence = sentence;
+        this.isEmpty = isEmpty;
+        this.searchVal = searchVal;
+        this.searchElm = searchElm;
+        this.searchIndex = searchIndex;
+        this.searchPercentage = searchPercentage;
+        this.notMatch = notMatch;
+        this.i = i;
+        this.helight = false;
+        this.suggestId = null;
+
+    }
+    parentSettingsHas(prop) {
+        return (this.hasOwnProperty('search2Parent') && typeof(this.search2Parent) == 'object' && this.search2Parent.hasOwnProperty('settings') && typeof(this.search2Parent.settings) == 'object' && this.search2Parent.settings.hasOwnProperty(prop)) ? true : false;
+    }
+    getSelfElm() {
+        return (this.suggestId && $(`#${this.suggestId}`).length) ? $(`#${this.suggestId}`) : $([]);
+    }
+    toggleHover(add = false) {
+
+        this.search2Parent.clearHover();
+        const targetElm = this.getSelfElm();
+        if (add && this.parentSettingsHas('helightClass') && targetElm.length) {
+            targetElm.addClass(this.search2Parent.settings.helightClass);
+        }
+    }
+    toggleSuggest(add = false) {
+        if (this.sentenceElm && $(this.sentenceElm).length && this.parentSettingsHas('sugesstClass')) {
+            const sugesstClass = this.search2Parent.settings.sugesstClass;
+            if (add) {
+                this.sentenceElm.addClass(sugesstClass);
+            } else {
+                this.sentenceElm.removeClass(sugesstClass);
+            }
+        }
+    }
+    toggleHelightElm(isMouseEnter = true) {
+        console.log("here", this.getSelfElm().length, this.suggestId);
+
+        if (this.sentenceElm && $(this.sentenceElm).length && this.parentSettingsHas('helightClass')) {
+            const helightClass = this.search2Parent.settings.helightClass;
+            if (isMouseEnter) {
+                this.toggleHover(true);
+                this.sentenceElm.addClass(helightClass);
+                this.sentenceElm.get(0).scrollIntoView({
+                    behavior: 'smooth',
+                });
+
+            } else {
+                this.toggleHover(false);
+                this.sentenceElm.removeClass(helightClass);
+            }
+        }
+
+
+
+
+    }
+    selectSenetance() {
+        const parent = this.search2Parent;
+        if (parent instanceof Search2) {
+            let selectClass = "bg-success text-white";
+            if (this.parentSettingsHas('selectClass')) {
+                selectClass = parent.settings.selectClass;
+            }
+            parent.setLastScrollY();
+            $(parent.inputSelc).val("");
+            $(parent.inputSelc).trigger("input");
+            $(this.sentenceElm).get(0).scrollIntoView({
+                behavior: 'smooth'
+            });
+            if (parent.selectTimeout) {
+                clearTimeout(parent.selectTimeout);
+            }
+            $(this.sentenceElm).addClass(selectClass);
+            parent.selectTimeout = setTimeout(() => {
+                $(this.sentenceElm).removeClass(selectClass);
+            }, 1000);
+        }
+    }
+}
+class Search2 {
+    constructor(id, inputSelc, sentenceCont, sentences, searchSuggestions, settings) {
+
+        this.inputSelc = inputSelc;
+        this.sentenceCont = sentenceCont;
+        this.sentences = sentences;
+        this.searchSuggestions = searchSuggestions;
+        this.id = id;
+        this.suggestClass = `suggest_${this.id}`;
+        this.valid = true;
+        this.message = '';
+        this.sentenceObjs = [];
+        this.displayList = [];
+        this.placeholder = '';
+        this.allowedOrders = ['searchIndex'];
+        this.settings = settings;
+        this.searchVal = '';
+        this.prevSearchVal = '';
+        this.lastScrollY = 0;
+        this.applyTrim = true;
+        this.applyToLowerCase = true;
+        this.selectTimeout = null;
+        this.arrowI = -1;
+        this.selectedByArrow = null;
+        this.preventKeyDown = true;
+
+        //default settings
+        this.helightClass = this.settings.helightClass;
+
+        this.addInitalEvents();
+    }
+    trimOrVal(val) {
+        if (this.applyTrim) {
+            return val.trim();
+        } else {
+            return val;
+        }
+    }
+    toLowerCaseOrVal(val) {
+        if (this.applyToLowerCase) {
+            return val.toLowerCase();
+        } else {
+            return val;
+        }
+    }
+    setLastScrollY() {
+        const sentenceCont = $(this.sentenceCont).eq(0);
+        const scrollTop = sentenceCont.length ? parseInt(sentenceCont.scrollTop()) : null;
+        if (!isNaN(scrollTop)) {
+            this.lastScrollY = scrollTop;
+        }
+    }
+    updateLastScrollY() {
+        const sentenceCont = $(this.sentenceCont).eq(0);
+        if (sentenceCont.length) {
+
+            if (this.prevSearchVal === '' && this.searchVal !== '') {
+                // apply back to last scroll this first load so save and set inital lastScroll
+                ////scrollTo this.lastScrollY
+                this.setLastScrollY();
+
+            } else if (this.searchVal === '' && this.prevSearchVal !== '') {
+                // this clear mean back to last scroll Index is it was value but become empty so cleared back to last recored and set prevSearch to empty so accept new scroll then start search etc logical
+                ////scrollTo this.lastScrollY
+                sentenceCont.get(0).scrollTo({
+                    top: this.lastScrollY, // y pixel
+                    behavior: 'smooth'
+                });
+                this.prevSearchVal = '';
+
+            } else {
+                // no touch last index user searching and scrolling
+                return false;
+            }
+        }
+
+    }
+    clearHover() {
+        if (this.suggestClass && $(`.${this.suggestClass}`).length && this.sentences && $(this.sentences).length && this.settings.helightClass) {
+            $(`.${this.suggestClass}`).removeClass(this.settings.helightClass);
+            $(this.sentences).removeClass(this.settings.helightClass);
+        }
+    }
+    startListenToKeys() {
+        if (this.inputSelc && $(this.inputSelc).length) {
+            $(this.inputSelc).on("keydown", (e) => {
+                this.keyDownHandler(e)
+            });
+            console.log("ready to next part of event");
+        }
+        console.log("ready to next part of event", this.inputSelc);
+    }
+    endListenToKeys() {
+        if (this.inputSelc && $(this.inputSelc).length) {
+            $(this.inputSelc).off("keydown");
+            console.log("close");
+        }
+    }
+
+    toggleSuggestionsActive(add = false) {
+        if (this.searchSuggestions && $(this.searchSuggestions).length > 0) {
+
+            if (add) {
+                $(this.searchSuggestions).addClass(this.settings.activeByArrowClasses);
+            } else {
+                $(this.searchSuggestions).removeClass(this.settings.activeByArrowClasses);
+            }
+        }
+    }
+    selectByKey() {
+
+        if (this.arrowI === -1) {
+            this.toggleSuggestionsActive(false);
+            this.clearHover();
+            this.preventKeyDown = false;
+            this.selectedByArrow = null;
+        } else if ((this.displayList.length > this.arrowI) && this.displayList[this.arrowI] instanceof SentenceObj && this.arrowI === 0) {
+            this.preventKeyDown = true;
+            this.toggleSuggestionsActive(true);
+            this.selectedByArrow = this.displayList[this.arrowI];
+            this.selectedByArrow.toggleHelightElm();
+        } else if ((this.displayList.length > this.arrowI) && this.displayList[this.arrowI] instanceof SentenceObj) {
+            this.selectedByArrow = this.displayList[this.arrowI];
+            this.selectedByArrow.toggleHelightElm();
+        } else {
+            return false;
+        }
+
+        console.log(this.displayList);
+    }
+    keyDownHandler(e) {
+
+        if (e.keyCode === 38) {
+            var preventKeyDown = (this.preventKeyDown) ? e.preventDefault() : false;
+            this.arrowI = Math.max(this.arrowI - 1, -1);
+            this.selectByKey();
+        } else if (e.keyCode === 40) {
+            var preventKeyDown = (this.preventKeyDown) ? e.preventDefault() : false;
+            this.arrowI = Math.min(this.arrowI + 1, this.displayList.length - 1);
+            this.selectByKey();
+        } else if (e.keyCode === 13) {
+            if (this.selectedByArrow instanceof SentenceObj) {
+              var preventKeyDown = (this.preventKeyDown) ? e.preventDefault() : false;
+              this.selectedByArrow.selectSenetance();
+            }
+        } else {
+            return false;
+        }
+    }
+    settingsHas(prop = 'helightClass') {
+        return (this.hasOwnProperty('settings') && typeof(this.settings) == 'object' && this.settings.hasOwnProperty(prop)) ? true : false;
+    }
+
+
+    orderBy(by = 'searchIndex') {
+        if (this.allowedOrders.includes(this.by)) {
+
+        } else {
+            this.valid = false;
+            this.message = 'invalid order By provided by system';
+            return false;
+        }
+        console.log(`order sentenceObjs by ${by}`, this.sentenceObjs);
+    }
+    addInitalEvents() {
+        // search input ev
+        $(this.inputSelc).on('focusin', () => {
+            this.startListenToKeys()
+        });
+        $(this.inputSelc).on('focusout', () => {
+            this.endListenToKeys()
+        });
+    }
+    addEvents() {
+        this.sentenceObjs.forEach((sentenceObj) => {
+
+
+
+            // suggest obj effect senetence events
+            $(`#${sentenceObj.suggestId}`).on("mouseenter", () => {
+                sentenceObj.toggleHelightElm(true);
+            });
+
+            $(`#${sentenceObj.suggestId}`).on("mouseout", () => {
+
+                sentenceObj.toggleHelightElm(false);
+            });
+
+
+            $(`#${sentenceObj.suggestId}`).on("click", () => {
+                sentenceObj.selectSenetance();
+            });
+
+        });
+    }
+
+    display() {
+        let index = 0;
+        if (this.searchSuggestions && $(this.searchSuggestions).length) {
+            const suggestBSClases = typeof(this.settings.suggestBSClases) === 'string' ? this.settings.suggestBSClases : '';
+            
+            //clear previous data before recreate suggest menu
+            this.toggleSuggestionsActive(false);
+            this.preventKeyDown = true;
+            this.arrowI = -1;
+            this.selectedByArrow = null;
+            
+
+            let suggestionsHTML = '';
+            this.displayList = [];
+            this.sentenceObjs.forEach((sentenceObj, i, arr) => {
+                if (sentenceObj.notMatch === false) {
+                    index += 1;
+                    arr[i].suggestId = `suggest_${this.id}_${index}`;
+
+                    suggestionsHTML += `<p id="${arr[i].suggestId}" class="${this.suggestClass} ${suggestBSClases}">${$(sentenceObj.sentenceElm).text()}</p>`;
+
+                    const suggestClass = this.settingsHas('sugesstClass') ? this.settings.sugesstClass : false;
+                    sentenceObj.toggleSuggest(true);
+                    this.displayList.push(sentenceObj);
+
+                } else {
+                    sentenceObj.toggleSuggest(false);
+                    sentenceObj.toggleHelightElm(false);
+                }
+            });
+            if (suggestionsHTML.length > 0) {
+                $(this.searchSuggestions).show();
+            } else {
+                $(this.searchSuggestions).hide();
+            }
+            $(this.searchSuggestions).html(suggestionsHTML);
+            this.addEvents();
+
+        }
+
+    }
+}
+
+function getSearch2(id, inputSelc, sentenceCont, sentences, searchSuggestions, settings = {}) {
+    let defaultSettings = {
+        helightClass: 'bg-primary test-dark',
+        sugesstClass: "bg-light text-dark",
+        selectClass: "bg-success text-white",
+        suggestBSClases: 'p-2 m-0 border rounded shadow mb-1',
+        activeByArrowClasses: 'shadow-lg'
+    };
+    // 1- settings provided by dev overide defaultSettings, always defaultSettings have the required props, full option not provide settings or provide some and overide duplicate
+    if (settings && typeof(settings) === 'object') {
+        for (key in settings) {
+
+            if (key === 'suggestBSClases' && typeof(settings[key]) === 'string') {
+                defaultSettings[key] += (' ' + settings[key]);
+            } else {
+                defaultSettings[key] = settings[key];
+            }
+
+        }
+    }
+    console.log('settings applied', defaultSettings);
+    const search2 = new Search2(id, inputSelc, sentenceCont, sentences, searchSuggestions, defaultSettings);
+
+    if (inputSelc && sentences && $(inputSelc).length && $(sentences).length) {
+        function addIncludedWordIndex(sentenceObjs) {
+
+            if (Array.isArray(sentenceObjs) && sentenceObjs.length > 0) {
+
+                sentenceObjs.forEach((sentenceObj, i, arr) => {
+                    const sentence = search2.toLowerCaseOrVal(sentenceObj.sentence);
+                    const searchVal = search2.toLowerCaseOrVal(sentenceObj.searchVal);
+                    const isEmpty = sentenceObj.isEmpty;
+                    // reset notmatch every new search ontime 
+                    arr[i].notMatch = false;
+
+                    const searchValList = searchVal.split(" ");
+
+
+
+                    for (let w = 0; w < searchValList.length; w++) {
+                        const searchWord = search2.trimOrVal(searchValList[w]);
+                        let searchIndex = parseInt(sentenceObj.searchIndex);
+                        if (!isNaN(searchIndex)) {
+                            const wordIncluded = sentence.includes(searchWord);
+
+                            arr[i].searchIndex = (searchWord !== '' && wordIncluded) ? arr[i].searchIndex + 1 : arr[i].searchIndex;
+                            if (searchWord && searchValList.length === 1 && wordIncluded && sentence.length === searchWord.length) {
+                                arr[i].searchIndex += 9;
+                                arr[i].notMatch = false;
+                            } else if (searchWord && searchValList.length === 1 && wordIncluded && sentence.length !== searchWord.length && searchWord.length >= (sentence.length / 2.5)) {
+                                arr[i].searchIndex += 6;
+                                arr[i].notMatch = false;
+                            } else if (searchValList.length === 1 && wordIncluded && sentence.length !== searchWord.length && (searchWord && (searchWord.length / sentence.length) * 100) >= (sentence.length / 3.5)) {
+                                arr[i].searchIndex += 3;
+                                arr[i].notMatch = false;
+                            } else {
+                                arr[i].searchIndex += 0;
+                                arr[i].notMatch = true;
+                            }
+
+                            if (arr[i].searchIndex > 0) {
+                                arr[i].notMatch = false;
+                            }
+
+                            /*
+                            if (i == 1){
+                            console.log(arr[i].searchIndex, searchWord, 'here',searchValList[i]);
+                            console.log(sentenceObj, 'me', arr[i], searchWord, sentence.includes(searchWord), sentence);
+                            }*/
+                        } else {
+                            search2.valid = false;
+                            search2.message = 'invalid index provided';
+                            break;
+                        }
+                    }
+                    search2.placeholder = `sentence: ${sentence}, searchVal: ${searchVal}, isEmpty: ${isEmpty}`;
+                });
+                return sentenceObjs;
+            } else {
+                search2.valid = false;
+                search2.message = 'invalid or empty sentenceObjs provided, list is required';
+                return sentenceObjs;
+            }
+        }
+    } else {
+        search2.message = "missing required elements or invalid selectors, inputSelc, sentences";
+        return search2;
+    }
+
+
+    $(inputSelc).on('input', (ev) => {
+        if (ev && $(ev.currentTarget)) {
+            search2.prevSearchVal = search2.searchVal;
+            search2.searchVal = search2.trimOrVal($(search2.inputSelc).val());
+            //save last scroll and apply back scroll if needed
+            search2.updateLastScrollY();
+
+
+
+            search2.sentenceObjs = Array.from($(sentences)).map((elm, i) => {
+                const sentenceElm = $(elm);
+                const searchElm = $(ev.currentTarget);
+                const searchVal = $(ev.currentTarget).val();
+                const isEmpty = ((search2.trimOrVal(sentenceElm.text()) !== '') ? false : true);
+                const sentence = $(sentenceElm).text();
+                const searchIndex = 0;
+                const notMatch = true;
+                const searchPercentage = null;
+                return new SentenceObj(
+                    search2,
+                    sentenceElm,
+                    sentence,
+                    isEmpty,
+                    searchVal,
+                    searchElm,
+                    searchIndex,
+                    searchPercentage,
+                    notMatch,
+                    i
+                );
+            });
+
+            search2.sentenceObjs = addIncludedWordIndex(search2.sentenceObjs);
+            search2.display();
+            console.log("stateObj", search2.sentenceObjs);
+        } else {
+            search2.message = 'issue in events';
+        }
+    });
+    return search2;
+}
+const search2StateObj = getSearch2("searchV2", "#demo", "#sentence_cont", ".sentence", "#search_suggestions", {
+    sugesstClass: "suggest_class",
+    helightClass: "helight_class",
+    selectClass: "select_class",
+    suggestBSClases: "suggest_hover cursor-pointer"
+});
+
+//alert(search2StateObj.valid);
+console.log(search2StateObj);
+</script>
+</body>
+</html>
